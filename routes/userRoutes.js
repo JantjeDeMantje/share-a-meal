@@ -5,9 +5,7 @@ const userController = require('../controllers/userController');
 // Register a new user
 router.post('/register', userController.register);
 
-// Temporary test route
-router.get('/test', (req, res) => {
-  res.send('User route works!');
-});
+// Get all users
+router.get('/', userController.getAllUsers);
 
 module.exports = router;
