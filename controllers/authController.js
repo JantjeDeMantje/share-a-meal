@@ -1,43 +1,41 @@
-const db = require('../utils/db');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { sendResponse } = require('../utils/responseHelper');
+const db = require("../utils/db");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { sendResponse } = require("../utils/responseHelper");
 
-const JWT_SECRET = process.env.JWT_SECRET || 'yourSuperSecretKey'; // Replace for production
+const JWT_SECRET = process.env.JWT_SECRET || "yourSuperSecretKey"; // Replace for production
 
 exports.login = async (req, res) => {
   const { emailAdress, password } = req.body;
 
   if (!emailAdress || !password) {
-    return sendResponse(res, 400, 'Email and password are required');
+    return sendResponse(res, 400, "Email and password are required");
   }
 
   try {
     const [rows] = await db.execute(
-      'SELECT * FROM `user` WHERE emailAdress = ?',
+      "SELECT * FROM `user` WHERE emailAdress = ?",
       [emailAdress]
     );
 
     if (rows.length === 0) {
-      return sendResponse(res, 404, 'User not found');
+      return sendResponse(res, 404, "User not found");
     }
 
     const user = rows[0];
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return sendResponse(res, 401, 'Invalid password');
+      return sendResponse(res, 401, "Invalid password");
     }
 
     // Optional: Generate JWT token
     const token = jwt.sign(
       {
         userId: user.id,
-        email: user.emailAdress,
-        roles: user.roles
       },
-      JWT_SECRET,
-      { expiresIn: '1h' }
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
     );
 
     // Exclude password from returned data
@@ -51,14 +49,12 @@ exports.login = async (req, res) => {
       roles: user.roles,
       street: user.street,
       city: user.city,
-      token
+      token,
     };
 
-    return sendResponse(res, 200, 'Login successful', userData);
-
+    return sendResponse(res, 200, "Login successful", userData);
   } catch (err) {
     console.error(err);
-    return sendResponse(res, 500, 'Database error');
+    return sendResponse(res, 500, "Database error");
   }
 };
-
