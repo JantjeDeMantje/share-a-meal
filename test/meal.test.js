@@ -14,7 +14,6 @@ describe("UC-301 Toevoegen van maaltijd", () => {
   let cookId;
 
   before(async () => {
-    // Create test user
     await chai
       .request(server)
       .post("/api/users/register")
@@ -28,7 +27,6 @@ describe("UC-301 Toevoegen van maaltijd", () => {
       })
       .catch(() => {});
 
-    // Login
     const res = await chai
       .request(server)
       .post("/api/auth/login")
@@ -44,7 +42,6 @@ describe("UC-301 Toevoegen van maaltijd", () => {
       .post("/api/meals")
       .set("Authorization", `Bearer ${token}`)
       .send({
-        // name ontbreekt
         price: 12.5,
         dateTime: new Date().toISOString(),
         maxAmountOfParticipants: 5,
@@ -100,7 +97,6 @@ describe("UC-302 Wijzigen van maaltijdgegevens", () => {
   let token, otherToken, mealId;
 
   before(async () => {
-    // Create cook user
     await chai
       .request(server)
       .post("/api/users/register")
@@ -121,7 +117,6 @@ describe("UC-302 Wijzigen van maaltijdgegevens", () => {
 
     token = loginRes.body.data.token;
 
-    // Create another user
     await chai
       .request(server)
       .post("/api/users/register")
@@ -142,7 +137,6 @@ describe("UC-302 Wijzigen van maaltijdgegevens", () => {
 
     otherToken = otherLogin.body.data.token;
 
-    // Create a meal
     const mealRes = await chai
       .request(server)
       .post("/api/meals")
@@ -169,7 +163,6 @@ describe("UC-302 Wijzigen van maaltijdgegevens", () => {
       .put(`/api/meals/${mealId}`)
       .set("Authorization", `Bearer ${token}`)
       .send({
-        // price ontbreekt
         name: "Updated Meal",
         maxAmountOfParticipants: 3,
       });
@@ -239,7 +232,6 @@ describe('UC-303 Opvragen van alle maaltijden', () => {
   let token;
 
   before(async () => {
-    // Login to get a valid token
     const res = await chai
       .request(server)
       .post('/api/auth/login')
@@ -269,7 +261,6 @@ describe('UC-304 Opvragen van maaltijd bij ID', () => {
   let createdMealId;
 
   before(async () => {
-    // Log in to get token
     const res = await chai
       .request(server)
       .post('/api/auth/login')
@@ -277,7 +268,6 @@ describe('UC-304 Opvragen van maaltijd bij ID', () => {
 
     token = res.body.data.token;
 
-    // Create a meal to test TC-304-2
     const createRes = await chai
       .request(server)
       .post('/api/meals')
@@ -302,7 +292,7 @@ describe('UC-304 Opvragen van maaltijd bij ID', () => {
   it('TC-304-1 Maaltijd bestaat niet', async () => {
     const res = await chai
       .request(server)
-      .get('/api/meals/999999') // non-existing ID
+      .get('/api/meals/999999')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res).to.have.status(404);
@@ -325,21 +315,18 @@ describe('UC-305 Verwijderen van maaltijd', () => {
   let cookToken, otherToken, mealId;
 
   before(async () => {
-    // Login as cook
     const cookRes = await chai
       .request(server)
       .post('/api/auth/login')
       .send({ emailAdress: 'c.cook@example.com', password: 'Secret123' });
     cookToken = cookRes.body.data.token;
 
-    // Login as another user
     const otherRes = await chai
       .request(server)
       .post('/api/auth/login')
       .send({ emailAdress: 'o.other@example.com', password: 'secret123' });
     otherToken = otherRes.body.data.token;
 
-    // Create meal to delete later
     const mealRes = await chai
       .request(server)
       .post('/api/meals')

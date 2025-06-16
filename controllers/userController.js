@@ -7,7 +7,6 @@ import {
   isValidPhoneNumber,
 } from "../utils/validators.js";
 
-// Get all users with optional filters
 const getAllUsers = async (req, res) => {
   const { isActive, firstName, lastName, emailAdress } = req.query;
 
@@ -45,7 +44,6 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// Register a new user
 const register = async (req, res) => {
   const {
     firstName,

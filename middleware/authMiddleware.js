@@ -6,7 +6,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'yourSuperSecretKey';
 export const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
 
-  // Check if the header exists and is in the correct format
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return sendResponse(res, 401, 'Access denied. No token provided.');
   }

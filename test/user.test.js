@@ -143,7 +143,7 @@ describe("UC-202 Opvragen van overzicht van users", () => {
     chai
       .request(server)
       .get("/api/users")
-      .set("Authorization", `Bearer ${validToken}`) // make sure validToken is defined
+      .set("Authorization", `Bearer ${validToken}`)
       .end((err, res) => {
         expect(res).to.have.status(200);
         expect(res.body.data).to.be.an("array");
@@ -211,7 +211,6 @@ describe("UC-203 Opvragen van gebruikersprofiel", () => {
   let validToken;
 
   before(async () => {
-    // Zorg dat de testgebruiker bestaat
     await chai
       .request(server)
       .post("/api/users/register")
@@ -265,7 +264,6 @@ describe("UC-204 Opvragen van usergegevens bij ID", () => {
   let testUserId;
 
   before(async () => {
-    // 1. Maak gebruiker aan (indien nodig)
     const registerRes = await chai
       .request(server)
       .post("/api/users/register")
@@ -277,7 +275,7 @@ describe("UC-204 Opvragen van usergegevens bij ID", () => {
         street: "Straat 1",
         city: "Teststad",
       })
-      .catch(() => {}); // Negeer conflict
+      .catch(() => {});
 
     const loginRes = await chai
       .request(server)
@@ -313,7 +311,7 @@ describe("UC-204 Opvragen van usergegevens bij ID", () => {
   it("TC-204-2 Gebruiker-ID bestaat niet", (done) => {
     chai
       .request(server)
-      .get("/api/meals/user/999999") // niet-bestaand ID
+      .get("/api/meals/user/999999")
       .set("Authorization", `Bearer ${validToken}`)
       .end((err, res) => {
         expect(res).to.have.status(404);
@@ -344,7 +342,6 @@ describe("UC-205 Updaten van usergegevens", () => {
   const password = "Secret123";
 
   before(async () => {
-    // Create user if needed
     await chai
       .request(server)
       .post("/api/users/register")
@@ -359,7 +356,6 @@ describe("UC-205 Updaten van usergegevens", () => {
       })
       .catch(() => {});
 
-    // Login
     const loginRes = await chai
       .request(server)
       .post("/api/auth/login")
@@ -377,7 +373,6 @@ describe("UC-205 Updaten van usergegevens", () => {
       .send({
         firstName: "Updated",
         phoneNumber: "06-12345678",
-        // emailAdress ontbreekt
       })
       .end((err, res) => {
         expect(res).to.have.status(400);
@@ -387,7 +382,6 @@ describe("UC-205 Updaten van usergegevens", () => {
   });
 
   it("TC-205-2 Gebruiker is niet de eigenaar van de data", async () => {
-    // Create a second user
     await chai
       .request(server)
       .post("/api/users/register")
@@ -427,7 +421,7 @@ describe("UC-205 Updaten van usergegevens", () => {
       .set("Authorization", `Bearer ${validToken}`)
       .send({
         emailAdress: email,
-        phoneNumber: "123456", // Ongeldig nummer
+        phoneNumber: "123456",
       })
       .end((err, res) => {
         expect(res).to.have.status(400);
@@ -490,7 +484,6 @@ describe("UC-206 Verwijderen van user", () => {
   let token;
 
   beforeEach(async () => {
-    // 1. Register a user
     await chai.request(server)
       .post("/api/users/register")
       .send({
@@ -503,7 +496,6 @@ describe("UC-206 Verwijderen van user", () => {
         city: "Teststad"
       });
 
-    // 2. Login
     const loginRes = await chai.request(server)
       .post("/api/auth/login")
       .send({ emailAdress: "d.delete@example.com", password: "Secret123" });
@@ -523,14 +515,13 @@ describe("UC-206 Verwijderen van user", () => {
 
   it("TC-206-2 Gebruiker is niet ingelogd", async () => {
     const res = await chai.request(server)
-      .delete(`/api/users/${userId}`); // no token
+      .delete(`/api/users/${userId}`);
 
     expect(res).to.have.status(401);
     expect(res.body).to.have.property("message");
   });
 
   it("TC-206-3 Gebruiker is niet de eigenaar van de data", async () => {
-    // Create another user
     await chai.request(server)
       .post("/api/users/register")
       .send({
