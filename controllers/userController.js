@@ -1,18 +1,20 @@
-const bcrypt = require("bcryptjs");
-const db = require("../utils/db");
-const { sendResponse } = require("../utils/responseHelper");
+import bcrypt from "bcryptjs";
+import db from "../utils/db.js";
+import { sendResponse } from "../utils/responseHelper.js";
+import {
+  isValidEmail,
+  isValidPassword,
+  isValidPhoneNumber,
+} from "../utils/validators.js";
 
 // Get all users with optional filters
-exports.getAllUsers = async (req, res) => {
-  // Extract possible filter fields from query parameters
+const getAllUsers = async (req, res) => {
   const { isActive, firstName, lastName, emailAdress } = req.query;
 
-  // Start with base SQL
   let sql =
     "SELECT id, firstName, lastName, emailAdress, isActive, phoneNumber, roles, street, city FROM `user` WHERE 1=1";
   const params = [];
 
-  // Dynamically add filters if present
   if (isActive !== undefined) {
     sql += " AND isActive = ?";
     params.push(isActive);
@@ -43,8 +45,8 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-//Register a new user
-exports.register = async (req, res) => {
+// Register a new user
+const register = async (req, res) => {
   const {
     firstName,
     lastName,
@@ -65,6 +67,20 @@ exports.register = async (req, res) => {
     !city
   ) {
     return sendResponse(res, 400, "Missing required fields");
+  }
+
+  if (!isValidEmail(emailAdress)) {
+    return sendResponse(res, 400, "Invalid email format");
+  }
+  if (!isValidPassword(password)) {
+    return sendResponse(
+      res,
+      400,
+      "Password must be at least 8 characters, contain a capital letter and a number"
+    );
+  }
+  if (phoneNumber && !isValidPhoneNumber(phoneNumber)) {
+    return sendResponse(res, 400, "Invalid phone number format");
   }
 
   try {
@@ -115,10 +131,10 @@ exports.register = async (req, res) => {
   }
 };
 
-//Update a user
-exports.updateUser = async (req, res) => {
-  const userId = parseInt(req.params.id);
-  const {
+const updateUser = async (req, res) => {
+  const userId = Number(req.params.id);
+
+  let {
     firstName,
     lastName,
     emailAdress,
@@ -129,24 +145,39 @@ exports.updateUser = async (req, res) => {
     roles,
   } = req.body;
 
+  if (!emailAdress) {
+    return sendResponse(res, 400, "emailAdress is verplicht", {});
+  }
+
+  if (!isValidEmail(emailAdress)) {
+    return sendResponse(res, 400, "Invalid email format", {});
+  }
+  if (phoneNumber && !isValidPhoneNumber(phoneNumber)) {
+    return sendResponse(res, 400, "Invalid phone number format", {});
+  }
+
+  firstName = firstName ?? null;
+  lastName = lastName ?? null;
+  phoneNumber = phoneNumber ?? null;
+  street = street ?? null;
+  city = city ?? null;
+  isActive = typeof isActive === "undefined" ? null : isActive ? 1 : 0;
+  roles = roles ?? null;
+
   try {
-    // Fetch the current data of the user
-    const [currentData] = await db.execute(
-      "SELECT * FROM `user` WHERE id = ?",
+    const [oldRows] = await db.execute(
+      "SELECT id, firstName, lastName, emailAdress, phoneNumber, street, city, isActive, roles FROM `user` WHERE id = ?",
       [userId]
     );
-
-    if (currentData.length === 0) {
-      return sendResponse(res, 404, "User not found");
+    if (oldRows.length === 0) {
+      return sendResponse(res, 404, "User not found", {});
     }
+    const oldData = oldRows[0];
 
-    const oldData = currentData[0];
-    delete oldData.password; // Remove password from old data for security
-
-    // Perform the update
     const sql = `
       UPDATE \`user\`
-      SET firstName = ?, lastName = ?, emailAdress = ?, phoneNumber = ?, street = ?, city = ?, isActive = ?, roles = ?
+      SET firstName = ?, lastName = ?, emailAdress = ?, phoneNumber = ?,
+          street = ?, city = ?, isActive = ?, roles = ?
       WHERE id = ?
     `;
     const params = [
@@ -156,18 +187,16 @@ exports.updateUser = async (req, res) => {
       phoneNumber,
       street,
       city,
-      isActive ? 1 : 0,
+      isActive,
       roles,
       userId,
     ];
 
     const [result] = await db.execute(sql, params);
-
     if (result.affectedRows === 0) {
-      return sendResponse(res, 404, "User not found or nothing to update");
+      return sendResponse(res, 404, "Nothing updated", {});
     }
 
-    // Prepare the updated data
     const updatedData = {
       id: userId,
       firstName,
@@ -176,7 +205,7 @@ exports.updateUser = async (req, res) => {
       phoneNumber,
       street,
       city,
-      isActive: isActive ? 1 : 0,
+      isActive,
       roles,
     };
 
@@ -186,15 +215,14 @@ exports.updateUser = async (req, res) => {
     });
   } catch (err) {
     console.error("Database error:", err);
-    return sendResponse(res, 500, "Database error", err);
+    return sendResponse(res, 500, "Database error", {});
   }
 };
 
-exports.deleteUser = async (req, res) => {
+const deleteUser = async (req, res) => {
   const userId = parseInt(req.params.id);
 
   try {
-    // Check if user exists
     const [rows] = await db.execute("SELECT * FROM `user` WHERE id = ?", [
       userId,
     ]);
@@ -203,7 +231,6 @@ exports.deleteUser = async (req, res) => {
       return sendResponse(res, 404, "User not found");
     }
 
-    // Delete the user
     const [result] = await db.execute("DELETE FROM `user` WHERE id = ?", [
       userId,
     ]);
@@ -217,4 +244,11 @@ exports.deleteUser = async (req, res) => {
     console.error(err);
     return sendResponse(res, 500, "Database error");
   }
+};
+
+export default {
+  getAllUsers,
+  register,
+  updateUser,
+  deleteUser,
 };

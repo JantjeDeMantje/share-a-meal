@@ -1,11 +1,11 @@
-const db = require("../utils/db");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { sendResponse } = require("../utils/responseHelper");
+import db from "../utils/db.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { sendResponse } from "../utils/responseHelper.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "yourSuperSecretKey"; // Replace for production
+const JWT_SECRET = process.env.JWT_SECRET || "yourSuperSecretKey";
 
-exports.login = async (req, res) => {
+const login = async (req, res) => {
   const { emailAdress, password } = req.body;
 
   if (!emailAdress || !password) {
@@ -26,19 +26,17 @@ exports.login = async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return sendResponse(res, 401, "Invalid password");
+      return sendResponse(res, 400, "Invalid password");
     }
 
-    // Optional: Generate JWT token
     const token = jwt.sign(
       {
         userId: user.id,
       },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    // Exclude password from returned data
     const userData = {
       id: user.id,
       firstName: user.firstName,
@@ -58,3 +56,5 @@ exports.login = async (req, res) => {
     return sendResponse(res, 500, "Database error");
   }
 };
+
+export default { login };
