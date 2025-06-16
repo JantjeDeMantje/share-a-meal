@@ -143,8 +143,8 @@ const updateUser = async (req, res) => {
     roles,
   } = req.body;
 
-  if (!emailAdress) {
-    return sendResponse(res, 400, "emailAdress is verplicht", {});
+  if (!emailAdress || !firstName || !lastName) {
+    return sendResponse(res, 400, "Missing required", {});
   }
 
   if (!isValidEmail(emailAdress)) {

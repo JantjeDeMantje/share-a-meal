@@ -24,7 +24,14 @@ const login = async (req, res) => {
 
     const user = rows[0];
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    let isMatch = false;
+    try {
+      isMatch = await bcrypt.compare(password, user.password);
+    } catch (err) {
+      console.error("bcrypt error:", err, "user.password:", user.password);
+      return sendResponse(res, 500, "Password verification failed");
+    }
+
     if (!isMatch) {
       return sendResponse(res, 400, "Invalid password");
     }

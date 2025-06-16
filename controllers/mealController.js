@@ -1,5 +1,6 @@
 import db from "../utils/db.js";
 import { sendResponse } from "../utils/responseHelper.js";
+import { toMySqlDateTime } from "../utils/dateHelper.js";
 
 const createMeal = async (req, res) => {
   const cookId = req.userId;
@@ -17,12 +18,13 @@ const createMeal = async (req, res) => {
     allergenes = "",
   } = req.body;
 
-  // Add this:
+  const mysqlDateTime = dateTime ? toMySqlDateTime(dateTime) : undefined;
+
   const allergenesValue = Array.isArray(allergenes)
     ? allergenes.join(",")
     : allergenes || "";
 
-  if (!name || !description || !price || !dateTime || !imageUrl) {
+  if (!name || !description || !price || !mysqlDateTime || !imageUrl) {
     return sendResponse(res, 400, "Missing required fields", {});
   }
 
@@ -36,7 +38,7 @@ const createMeal = async (req, res) => {
       name,
       description,
       price,
-      dateTime,
+      mysqlDateTime,
       imageUrl,
       isActive,
       isVega,
@@ -68,7 +70,12 @@ const updateMeal = async (req, res) => {
   const { name, price, maxAmountOfParticipants } = updateData;
 
   if (!name || !price || !maxAmountOfParticipants) {
-    return sendResponse(res, 400, "Missing required fields: name, price or maxAmountOfParticipants", {});
+    return sendResponse(
+      res,
+      400,
+      "Missing required fields: name, price or maxAmountOfParticipants",
+      {}
+    );
   }
 
   try {
@@ -93,6 +100,10 @@ const updateMeal = async (req, res) => {
     for (const key in updateData) {
       fields.push(`${key} = ?`);
       values.push(updateData[key]);
+      let val = updateData[key];
+      if (key === "dateTime") val = toMySqlDateTime(val);
+      fields.push(`${key} = ?`);
+      values.push(val);
     }
 
     values.push(mealId);

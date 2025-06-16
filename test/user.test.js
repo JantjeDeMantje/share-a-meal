@@ -12,7 +12,7 @@ chai.use(chaiHttp);
 describe("UC-201 Registreren als nieuwe user", () => {
   after(async () => {
     await db.execute("DELETE FROM `user` WHERE emailAdress = ?", [
-      "jan@test.com",
+      "t.jan@test.com",
     ]);
   });
   it("TC-201-1 Verplicht veld ontbreekt", (done) => {
@@ -109,7 +109,7 @@ describe("UC-201 Registreren als nieuwe user", () => {
       .send({
         firstName: "Jan",
         lastName: "Roelofs",
-        emailAdress: "jan@test.com",
+        emailAdress: "t.jan@test.com",
         password: "secret123",
         isActive: 1,
         phoneNumber: "0612345678",
@@ -118,7 +118,7 @@ describe("UC-201 Registreren als nieuwe user", () => {
         city: "Nieuwe stad",
       })
       .end((err, res) => {
-        expect(res).to.have.status(400);
+        expect(res).to.have.status(201);
         expect(res.body).to.have.property("message");
         done();
       });
@@ -132,7 +132,7 @@ describe("UC-202 Opvragen van overzicht van users", () => {
     chai
       .request(server)
       .post("/api/auth/login")
-      .send({ emailAdress: "jan@updated.com", password: "secret123" })
+      .send({ emailAdress: "l.loginuser@example.com", password: "secret123" })
       .end((err, res) => {
         validToken = res.body.data.token;
         done();
@@ -466,6 +466,12 @@ describe("UC-205 Updaten van usergegevens", () => {
       .send({
         emailAdress: email,
         phoneNumber: "06-87654321",
+        firstName: "Update",
+        lastName: "Tester",
+        street: "Straat",
+        city: "Stad",
+        isActive: 1,
+        roles: "editor,guest",
       })
       .end((err, res) => {
         expect(res).to.have.status(200);
@@ -473,7 +479,6 @@ describe("UC-205 Updaten van usergegevens", () => {
         expect(res.body.data.updatedData)
           .to.have.property("emailAdress")
           .that.equals("u.update@test.com");
-
         done();
       });
   });
@@ -484,19 +489,18 @@ describe("UC-206 Verwijderen van user", () => {
   let token;
 
   beforeEach(async () => {
-    await chai.request(server)
-      .post("/api/users/register")
-      .send({
-        firstName: "Delete",
-        lastName: "Me",
-        emailAdress: "d.delete@example.com",
-        password: "Secret123",
-        phoneNumber: "06-12345678",
-        street: "Teststraat",
-        city: "Teststad"
-      });
+    await chai.request(server).post("/api/users/register").send({
+      firstName: "Delete",
+      lastName: "Me",
+      emailAdress: "d.delete@example.com",
+      password: "Secret123",
+      phoneNumber: "06-12345678",
+      street: "Teststraat",
+      city: "Teststad",
+    });
 
-    const loginRes = await chai.request(server)
+    const loginRes = await chai
+      .request(server)
       .post("/api/auth/login")
       .send({ emailAdress: "d.delete@example.com", password: "Secret123" });
 
@@ -505,7 +509,8 @@ describe("UC-206 Verwijderen van user", () => {
   });
 
   it("TC-206-1 Gebruiker bestaat niet", async () => {
-    const res = await chai.request(server)
+    const res = await chai
+      .request(server)
       .delete("/api/users/999999")
       .set("Authorization", `Bearer ${token}`);
 
@@ -514,32 +519,31 @@ describe("UC-206 Verwijderen van user", () => {
   });
 
   it("TC-206-2 Gebruiker is niet ingelogd", async () => {
-    const res = await chai.request(server)
-      .delete(`/api/users/${userId}`);
+    const res = await chai.request(server).delete(`/api/users/${userId}`);
 
     expect(res).to.have.status(401);
     expect(res.body).to.have.property("message");
   });
 
   it("TC-206-3 Gebruiker is niet de eigenaar van de data", async () => {
-    await chai.request(server)
-      .post("/api/users/register")
-      .send({
-        firstName: "Other",
-        lastName: "User",
-        emailAdress: "o.other@example.com",
-        password: "Secret123",
-        street: "Straat",
-        city: "Stad"
-      });
+    await chai.request(server).post("/api/users/register").send({
+      firstName: "Other",
+      lastName: "User",
+      emailAdress: "o.other@example.com",
+      password: "Secret123",
+      street: "Straat",
+      city: "Stad",
+    });
 
-    const otherLogin = await chai.request(server)
+    const otherLogin = await chai
+      .request(server)
       .post("/api/auth/login")
       .send({ emailAdress: "o.other@example.com", password: "Secret123" });
 
     const otherToken = otherLogin.body.data.token;
 
-    const res = await chai.request(server)
+    const res = await chai
+      .request(server)
       .delete(`/api/users/${userId}`)
       .set("Authorization", `Bearer ${otherToken}`);
 
@@ -548,7 +552,8 @@ describe("UC-206 Verwijderen van user", () => {
   });
 
   it("TC-206-4 Gebruiker succesvol verwijderd", async () => {
-    const res = await chai.request(server)
+    const res = await chai
+      .request(server)
       .delete(`/api/users/${userId}`)
       .set("Authorization", `Bearer ${token}`);
 
