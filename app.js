@@ -14,7 +14,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/meals', mealRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080
 app.get('/', (req, res) => {
     res.send('API is running!');
 });
