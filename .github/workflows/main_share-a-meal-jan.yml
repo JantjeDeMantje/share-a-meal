@@ -78,6 +78,12 @@ jobs:
       - name: Unzip
         run: unzip release.zip
 
+      - name: Install production dependencies
+        run: npm ci --omit=dev
+
+      - name: Re-zip with node_modules
+        run: zip -r deploy.zip . -x ".git/**"
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
