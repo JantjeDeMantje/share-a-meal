@@ -93,11 +93,3 @@ jobs:
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
-      - name: "Deploy to Azure Web App"
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: "share-a-meal-jan"
-          slot-name: "Production"
-          package: .
-
