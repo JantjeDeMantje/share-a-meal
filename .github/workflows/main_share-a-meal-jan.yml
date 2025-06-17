@@ -31,8 +31,6 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        run: |
-          echo "Environment variables set."
 
       - name: npm install, build, and test
         run: |
