@@ -12,26 +12,24 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js version
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "20.x"
 
-      - name: npm install, build, and test
-        run: |
-          npm install
-          npm run build --if-present
+      - name: Install dependencies
+        run: npm install
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+      - name: Build project
+        run: npm run build --if-present
 
-      - name: Upload artifact for deployment job
+      - name: Zip artifact
+        run: zip -r release.zip .
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
@@ -40,25 +38,27 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
-    env: 
+    env:
+      DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_DATABASE: ${{ secrets.DB_DATABASE }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: node-app
 
-      - name: Unzip artifact for testing
+      - name: Unzip
         run: unzip release.zip
 
       - name: Install dependencies
         run: npm install
 
       - name: Run tests
-        run: npm test --if-present
+        run: npm test
 
   deploy:
     runs-on: ubuntu-latest
@@ -69,14 +69,13 @@ jobs:
     permissions:
       id-token: write
       contents: read
-
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: node-app
 
-      - name: Unzip artifact for deployment
+      - name: Unzip
         run: unzip release.zip
 
       - name: Login to Azure
@@ -86,17 +85,13 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_37DF52D0B6C140858FB51665F357422A }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_429042636C084BE8914FA48849E85F46 }}
 
-      - name: "Deploy to Azure Web App"
+      - name: Deploy to Azure
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: "share-a-meal-jan"
           slot-name: "Production"
           package: .
-        env: 
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+
 
 
