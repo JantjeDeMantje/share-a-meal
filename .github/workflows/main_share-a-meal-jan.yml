@@ -40,6 +40,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
+    env: 
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_DATABASE: ${{ secrets.DB_DATABASE }}
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
@@ -48,6 +53,9 @@ jobs:
 
       - name: Unzip artifact for testing
         run: unzip release.zip
+
+      - name: Install dependencies
+        run: npm install
 
       - name: Run tests
         run: npm test --if-present
@@ -90,5 +98,5 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
 
