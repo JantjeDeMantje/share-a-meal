@@ -8,7 +8,7 @@ function isValidEmail(email) {
 //   return passwordRegex.test(password);
 // }
 
-//Gebruikers in SQL script hebben 'secret' als wachtwoord, dus validatie zou altijd falen
+// Gebruikers in SQL script hebben 'secret' als wachtwoord, dus validatie zou altijd falen
 function isValidPassword(password) {
   return true;
 }
