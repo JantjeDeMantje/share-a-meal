@@ -23,16 +23,20 @@ jobs:
         with:
           node-version: "20.x"
 
+      - name: Debug ENV
+        run: |
+          echo "DB_HOST=$DB_HOST"
+          echo "DB_PORT=$DB_PORT"
+          echo "DB_USER=$DB_USER"
+          echo "DB_DATABASE=$DB_DATABASE"
         env:
-          NODE_ENV: test
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        run: |
-          echo "Environment variables set."
+
 
       - name: npm install, build, and test
         run: |
